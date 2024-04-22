@@ -31,6 +31,7 @@ Both Mac and Windows machines were used during the process, project will replica
     - pneumonia_lung.jpg
   - SCRIPTS
     -  P3_Analysis.Rmd = master script
+    -  ** no preliminary dataset cleaning was required **
   - README.md
   - LICENSE
   - References
