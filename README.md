@@ -16,9 +16,15 @@ Both Mac and Wondiws machines were used during the process, project will replica
 #### There are 6 main files and some of them include subfolders within them 
 - Root
   - DATA
-    - McDonalds_reviews.csv
-    - McDonalds_clean.csv
-    - Data Appendix
+    - TEST
+        - NORMAL
+        - PNEUMONIA
+    - TRAIN
+        - NORMAL
+        - PNEUMONIA
+    - VAL
+        - NORMAL
+        - PNEUMONIA
   - OUTPUT
     - Figure 1.png
     - Figure 2.png
@@ -35,4 +41,4 @@ Both Mac and Wondiws machines were used during the process, project will replica
 
 ## Reproducing Results
 To replicate results of this study, first step will downloading the original dataset from the Data folder in github, X-rays
-After donwloading the original dataset, next step will be running the master script, where data is cleaned, Vader package is ran, and cleaned data is downloaded in the current working directionary within your machine. Cleaned dataset, Mcdonalds_clean.csv, can also be used for data visualization done in R or the one genrated withion the master script. Lastly, H test was run by running DS4002_P1_hTesting.Rmd.
+After donwloading the original dataset, next step will be running the master script, meanwhile, make sure that your train, test, val, file locations are specified within your operating system.
