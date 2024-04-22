@@ -1,0 +1,188 @@
+---
+title: "DS4002_Project3"
+author: "Nathan Geng"
+date: '2024-04-16'
+output: html_document
+---
+
+```{r}
+library(keras)
+library(tidyverse)
+library(jpeg)
+library(ggplot2)
+library(grid)
+library(tensorflow)
+```
+
+```{r}
+# Set up file paths
+normal_cases_train_dir <- "/Users/nathangeng/Downloads/chest_xray/chest_xray/train/NORMAL"
+pneumonia_cases_train_dir <- "/Users/nathangeng/Downloads/chest_xray/chest_xray/train/PNEUMONIA"
+
+normal_cases_test_dir <- "/Users/nathangeng/Downloads/chest_xray/chest_xray/test/NORMAL"
+pneumonia_cases_test_dir <- "/Users/nathangeng/Downloads/chest_xray/chest_xray/test/PNEUMONIA"
+
+normal_cases_val_dir <- "/Users/nathangeng/Downloads/chest_xray/chest_xray/val/NORMAL"
+pneumonia_cases_val_dir <- "/Users/nathangeng/Downloads/chest_xray/chest_xray/val/PNEUMONIA"
+
+# Read images
+normal_train_files <- list.files(normal_cases_train_dir, pattern = ".jpeg", full.names = TRUE)
+pneumonia_train_files <- list.files(pneumonia_cases_train_dir, pattern = ".jpeg", full.names = TRUE)
+
+normal_test_files <- list.files(normal_cases_test_dir, pattern = ".jpeg", full.names = TRUE)
+pneumonia_test_files <- list.files(pneumonia_cases_test_dir, pattern = ".jpeg", full.names = TRUE)
+
+normal_val_files <- list.files(normal_cases_val_dir, pattern = ".jpeg", full.names = TRUE)
+pneumonia_val_files <- list.files(pneumonia_cases_val_dir, pattern = ".jpeg", full.names = TRUE)
+
+# Create labels
+normal_train_labels <- rep("normal", length(normal_train_files))
+pneumonia_train_labels <- rep("pneumonia", length(pneumonia_train_files))
+
+normal_test_labels <- rep("normal", length(normal_test_files))
+pneumonia_test_labels <- rep("pneumonia", length(pneumonia_test_files))
+
+normal_val_labels <- rep("normal", length(normal_val_files))
+pneumonia_val_labels <- rep("pneumonia", length(pneumonia_val_files))
+
+# Combine into a dataset
+normal_train_data <- data.frame(image_path = normal_train_files, label = normal_train_labels)
+pneumonia_train_data <- data.frame(image_path = pneumonia_train_files, label = pneumonia_train_labels)
+
+normal_test_data <- data.frame(image_path = normal_test_files, label = normal_test_labels)
+pneumonia_test_data <- data.frame(image_path = pneumonia_test_files, label = pneumonia_test_labels)
+
+normal_val_data <- data.frame(image_path = normal_val_files, label = normal_val_labels)
+pneumonia_val_data <- data.frame(image_path = pneumonia_val_files, label = pneumonia_val_labels)
+
+# Combine normal and pneumonia datasets
+training_data <- rbind(normal_train_data, pneumonia_train_data)
+
+testing_data <- rbind(normal_test_data, pneumonia_test_data)
+
+validation_data <- rbind(normal_val_data, pneumonia_val_data)
+
+# Show the structure of the dataset
+str(training_data)
+
+# Count the number of normal and pneumonia labeled lungs
+label_counts <- table(training_data$label)
+print(label_counts)
+
+# Visualizing the distribution of labels in the training dataset
+ggplot(data = training_data, aes(x = label)) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Normal vs. Pneumonia Labeled Lungs",
+       x = "Label",
+       y = "Count")
+```
+
+```{r}
+
+# Function to preprocess images
+preprocess_image <- function(image_path) {
+  # Read image
+  img <- readJPEG(image_path)
+  
+  # Resize image to 224x224x3
+  img <- tf$image$resize(img, size = c(224, 224))
+  
+  # Convert grayscale images to 3 channels
+  if (dim(img)[3] == 1) {
+    img <- tf$tile(img, multiples = c(1, 1, 3))
+  }
+  
+  # Convert BGR to RGB format
+  img <- tf$image$rgb_to_grayscale(img)
+  
+  # Normalize image pixels
+  img <- img / 255
+  
+  return(img)
+}
+
+# Load validation data
+validation_images <- lapply(validation_data$image_path, preprocess_image)
+validation_labels <- tf$one_hot(validation_data$label, depth = 2)
+
+# Load test data
+test_images <- lapply(testing_data$image_path, preprocess_image)
+test_labels <- tf$one_hot(testing_data$label, depth = 2)
+
+# Function to generate batches
+generate_batches <- function(images, labels, batch_size) {
+  num_samples <- length(images)
+  num_batches <- ceiling(num_samples / batch_size)
+  
+  for (i in 1:num_batches) {
+    start_idx <- (i - 1) * batch_size + 1
+    end_idx <- min(i * batch_size, num_samples)
+    
+    batch_images <- images[start_idx:end_idx]
+    batch_labels <- labels[start_idx:end_idx,]
+    
+    yield(list(batch_images, batch_labels))
+  }
+}
+
+# Example usage:
+batch_size <- 32
+train_batches <- generate_batches(train_images, train_labels, batch_size)
+
+
+```
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), input_shape = c(224, 224, 3)) %>%
+  layer_activation('relu') %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3)) %>%
+  layer_activation('relu') %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3)) %>%
+  layer_activation('relu') %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+
+  layer_flatten() %>%
+
+  layer_dense(units = 64) %>%
+  layer_activation('relu') %>%
+  layer_dense(units = 2) %>%
+  layer_activation('softmax')
+
+```
+
+```{r}
+batch_size <- 16
+nb_epochs <- 3
+
+# Define a train data generator
+train_data_gen <- data_gen(data = training_data, batch_size = batch_size)
+
+# Define the number of training steps
+nb_train_steps <- floor(dim(training_data)[1] / batch_size)
+
+```
+
+```{r}
+model %>% compile(
+  loss = 'binary_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+
+# Fit the model
+history <- model %>% fit_generator(
+  generator = train_data_gen,
+  epochs = nb_epochs,
+  steps_per_epoch = nb_train_steps,
+  validation_data = validation_data,
+  validation_steps = nb_validation_steps
+)
+
+```
+
+
