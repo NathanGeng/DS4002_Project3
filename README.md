@@ -2,15 +2,15 @@
 UVA DS 4002 Spring 2024 Group 13 Project 3 Files
 ## Software and Platform Selection
 ### Software Selection
-- In this project, we have decided to use Python software to manipulate data and R
+- In this project, we have decided to use R to manipulate data. This project can also be applied to Python as well.
 ### Additional Packages Utilized
-- Pandas package in python was used to manipulate and create data
-- Tensorflow package was utilized
-- keras package was utilized
-- Plotly Express and plotly.graph_objects Package was used to create various plots in Python
+- Pandas package was used to manipulate and create data
+- keras and Tensorflow packages to create the convolutional neural network
+- ggplot2 package to create plots in R
+- jpeg package to display images in R
 
 ### Platform 
-Both Mac and Wondiws machines were used during the process, project will replicable in both environments
+Both Mac and Windows machines were used during the process, project will replicable in both environments
 
 ## Map of the Documentation
 #### There are 6 main files and some of them include subfolders within them 
