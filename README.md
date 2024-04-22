@@ -26,16 +26,12 @@ Both Mac and Wondiws machines were used during the process, project will replica
         - NORMAL
         - PNEUMONIA
   - OUTPUT
-    - Figure 1.png
-    - Figure 2.png
-    - Figure 3.png
-    - Figure 4.png
-    - Figure 5.png
+    - dataset_distribution.jpg
+    - model_val_accuracy.jpg
+    - pneumonia_lung.jpg
   - SCRIPTS
-    -  DS4002_Project1.ipynb = Master script
-    -  DS Spring 24 Project 1.R
-    -  DS4002_P1_hTesting.Rmd
-  - Readnme.md
+    -  P3_Analysis.Rmd = master script
+  - README.md
   - LICENSE
   - References
 
